@@ -194,7 +194,7 @@ class CrossLayerTranscoder(torch.nn.Module):
 
             _, feat_idx = sparse_layer.indices()
             print(f"layer_id: {layer_id}")
-            print(f"feat_idx: {feat_idx}")
+            print(f"feat_idx: {feat_idx.shape}")
             encoder_vectors.append(W_enc_layer[feat_idx])
             print(f"len(encoder_vectors): {len(encoder_vectors)}")
 
