@@ -281,6 +281,7 @@ class CrossLayerTranscoder(torch.nn.Module):
         return self.compute_reconstruction(pos_ids, layer_ids, decoder_vectors)
 
     def forward(self, x):
+        print(x.shape)
         features = self.encode(x).to_sparse()
         return self.decode(features)
 
