@@ -193,7 +193,7 @@ class CrossLayerTranscoder(torch.nn.Module):
             sparse_layers.append(sparse_layer)
 
             _, feat_idx = sparse_layer.indices()
-            print(f"layer_id: {layer_id}, feat_idx.shape: {feat_idx.shape}")
+            # print(f"layer_id: {layer_id}, feat_idx.shape: {feat_idx.shape}")
             encoder_vectors.append(W_enc_layer[feat_idx])
 
         sparse_features = torch.stack(sparse_layers).coalesce()
