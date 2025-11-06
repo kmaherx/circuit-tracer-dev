@@ -193,10 +193,8 @@ class CrossLayerTranscoder(torch.nn.Module):
             sparse_layers.append(sparse_layer)
 
             _, feat_idx = sparse_layer.indices()
-            print(f"layer_id: {layer_id}")
-            print(f"feat_idx: {feat_idx.shape}")
+            print(f"layer_id: {layer_id}, feat_idx.shape: {feat_idx.shape}")
             encoder_vectors.append(W_enc_layer[feat_idx])
-            print(f"len(encoder_vectors): {len(encoder_vectors)}")
 
         sparse_features = torch.stack(sparse_layers).coalesce()
         active_encoders = torch.cat(encoder_vectors, dim=0)
@@ -281,7 +279,6 @@ class CrossLayerTranscoder(torch.nn.Module):
         return self.compute_reconstruction(pos_ids, layer_ids, decoder_vectors)
 
     def forward(self, x):
-        print(f"forward(self,x), x.shape: {x.shape}")
         features = self.encode(x).to_sparse()
         return self.decode(features)
 
@@ -299,9 +296,6 @@ class CrossLayerTranscoder(torch.nn.Module):
                 - decoder_vecs: Concatenated decoder vectors (scaled by activations)
                 - encoder_to_decoder_map: Mapping from encoder to decoder indices
         """
-        print("compute_attribution_components()")
-        print(f"inputs.shape: {inputs.shape}")
-        print()
         features, encoder_vectors = self.encode_sparse(inputs, zero_first_pos=True)
         pos_ids, layer_ids, feat_ids, decoder_vectors, encoder_to_decoder_map = (
             self.select_decoder_vectors(features)
