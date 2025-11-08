@@ -667,7 +667,7 @@ class ReplacementModel(HookedTransformer):
             new_acts = activations
             if layer in intervention_range:
                 # new_acts = new_acts + layer_deltas[layer]  # even more deltas? deltas 2 residual boogaloo
-                new_acts = layer_deltas[layer]  # fully replace the residual stream, like we did with acts above
+                new_acts[layer] = layer_deltas[layer]  # fully replace the residual stream, like we did with acts above
             layer_deltas[layer] *= 0  # clearing this is important for multi-token generation
             return new_acts
 
