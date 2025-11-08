@@ -597,7 +597,7 @@ class ReplacementModel(HookedTransformer):
             else:
                 n_pos = len(self.tokenizer(inputs).input_ids)
 
-        layer_deltas = torch.zeros(
+        layer_deltas = torch.zeros(  # deltas in actual residual stream
             [self.cfg.n_layers, n_pos, self.cfg.d_model],
             dtype=self.cfg.dtype,
             device=self.cfg.device,
@@ -626,7 +626,7 @@ class ReplacementModel(HookedTransformer):
             else:
                 # recompute deltas based on current activations
                 transcoder_activations = (
-                    activation_cache[layer][-1] if using_past_kv_cache else activation_cache[layer]
+                    activation_cache[layer][-1] if using_past_kv_cache else activation_cache[layer]  # get original activations
                 )
                 if transcoder_activations.is_sparse:
                     transcoder_activations = transcoder_activations.to_dense()
@@ -636,10 +636,11 @@ class ReplacementModel(HookedTransformer):
                         layer, transcoder_activations.unsqueeze(0)
                     ).squeeze(0)
 
-            activation_deltas = torch.zeros_like(transcoder_activations)
-            for pos, feature_idx, value in layer_interventions:
+            activation_deltas = torch.zeros_like(transcoder_activations)  # deltas in feature space (not residual, which is `layer_deltas`)
+            for pos, feature_idx, value in layer_interventions:  # here's where the interventions affect the activations
                 activation_deltas[pos, feature_idx] = (
-                    value - transcoder_activations[pos, feature_idx]
+                    # value - transcoder_activations[pos, feature_idx]  # it takes the difference between the intervention value and the original activation
+                    value  # modification; just take the new value as the intervention
                 )
 
             poss, feature_idxs = activation_deltas.nonzero(as_tuple=True)
@@ -653,14 +654,14 @@ class ReplacementModel(HookedTransformer):
                 layer_deltas[layer].index_add_(0, poss, decoder_vectors)
             else:
                 # Cross-layer transcoder case: [n_feature_idxs, n_remaining_layers, d_model]
-                decoder_vectors = decoder_vectors * new_values.unsqueeze(-1).unsqueeze(-1)
+                decoder_vectors = decoder_vectors * new_values.unsqueeze(-1).unsqueeze(-1)  # scale by activations
 
                 # Transpose to [n_remaining_layers, n_feature_idxs, d_model]
                 decoder_vectors = decoder_vectors.transpose(0, 1)
 
                 # Distribute decoder vectors across layers
                 n_remaining_layers = decoder_vectors.shape[0]
-                layer_deltas[-n_remaining_layers:].index_add_(1, poss, decoder_vectors)
+                layer_deltas[-n_remaining_layers:].index_add_(1, poss, decoder_vectors)  # deltas in actual residual stream
 
         def intervention_hook(activations, hook, layer: int):
             new_acts = activations
