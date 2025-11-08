@@ -664,10 +664,8 @@ class ReplacementModel(HookedTransformer):
                 layer_deltas[-n_remaining_layers:].index_add_(1, poss, decoder_vectors)  # deltas in actual residual stream
 
         def intervention_hook(activations, hook, layer: int):
-            new_acts = activations
-            print(new_acts.shape)
-            print(layer_deltas[layer].shape)
-            if layer in intervention_range:
+            new_acts = activations  # start off with original activations first
+            if layer in intervention_range:  # then insert activations from interventions
                 # new_acts = new_acts + layer_deltas[layer]  # even more deltas? deltas 2 residual boogaloo
                 new_acts = layer_deltas[layer]  # fully replace the residual stream, like we did with acts above
             layer_deltas[layer] *= 0  # clearing this is important for multi-token generation
